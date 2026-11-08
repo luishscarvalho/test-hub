@@ -1,0 +1,168 @@
+[project]
+name = "test-hub"
+version = "0.1.0"
+description = "Hub de smoke tests gerados a partir de specs OpenAPI, com histórico de execuções."
+readme = "README.md"
+requires-python = "==3.13.*"
+dependencies = [
+    "alembic>=1.20.1",
+    "fastapi>=0.162.2",
+    "httpx>=0.28.1",
+    "psycopg[binary]>=3.3.8",
+    "pydantic-settings>=2.16.2",
+    "python-multipart>=0.0.33",
+    "pyyaml>=6.0.3",
+    "redis>=8.1.0",
+    "rq>=3.0.0",
+    "schemathesis>=4.33.1",
+    "sqlmodel>=0.0.48",
+    "uvicorn>=0.54.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.13"
+files = ["app", "target_api", "tests"]
+plugins = ["pydantic.mypy"]
+warn_unused_configs = true
+check_untyped_defs = true
+ignore_missing_imports = false
+
+# ADR-004: modo estrito obrigatório em domain/ e application/.
+# "strict" não existe por módulo no mypy, então as flags são listadas uma a uma.
+[[tool.mypy.overrides]]
+module = ["app.domain.*", "app.application.*"]
+disallow_any_generics = true
+disallow_subclassing_any = true
+disallow_untyped_calls = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_decorators = true
+warn_unused_ignores = true
+warn_return_any = true
+no_implicit_reexport = true
+strict_equality = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = ["--strict-markers", "--import-mode=importlib"]
+markers = [
+    "unit: domain e application, sem I/O",
+    "integration: adapters e rotas, exigem PostgreSQL e Redis",
+    "e2e: ambiente completo via docker compose",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_also = ["if TYPE_CHECKING:", "\\.\\.\\."]
+
+# Fronteiras verificadas no job quality (ADR-003, 005, 006 e 008).
+[tool.importlinter]
+root_packages = ["app", "target_api"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Camadas da hexagonal (ADR-003)"
+type = "layers"
+layers = [
+    "app.bootstrap : app.adapters.inbound",
+    "app.adapters.outbound",
+    "app.application",
+    "app.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "domain e application sem frameworks (ADR-003)"
+type = "forbidden"
+source_modules = ["app.domain", "app.application"]
+forbidden_modules = [
+    "fastapi",
+    "starlette",
+    "sqlmodel",
+    "sqlalchemy",
+    "alembic",
+    "httpx",
+    "requests",
+    "rq",
+    "redis",
+    "schemathesis",
+]
+
+[[tool.importlinter.contracts]]
+name = "Entradas não importam adapters de saída (ADR-003)"
+type = "forbidden"
+source_modules = ["app.adapters.inbound"]
+forbidden_modules = ["app.adapters.outbound"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "SQLModel restrito à persistência (ADR-003)"
+type = "forbidden"
+source_modules = [
+    "app.adapters.inbound",
+    "app.adapters.outbound.queue",
+    "app.adapters.outbound.spec_loader",
+    "app.adapters.outbound.generator",
+    "app.bootstrap",
+]
+forbidden_modules = ["sqlmodel"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Schemathesis restrito ao adapter do gerador (ADR-005)"
+type = "forbidden"
+source_modules = [
+    "app.adapters.inbound",
+    "app.adapters.outbound.persistence",
+    "app.adapters.outbound.queue",
+    "app.adapters.outbound.spec_loader",
+    "app.bootstrap",
+]
+forbidden_modules = ["schemathesis"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "RQ e Redis restritos à fila e ao worker (ADR-006)"
+type = "forbidden"
+source_modules = [
+    "app.adapters.inbound.http",
+    "app.adapters.outbound.persistence",
+    "app.adapters.outbound.spec_loader",
+    "app.adapters.outbound.generator",
+    "app.bootstrap",
+]
+forbidden_modules = ["rq", "redis"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Hub e API alvo independentes (ADR-008)"
+type = "independence"
+modules = ["app", "target_api"]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.170.15",
+    "import-linter>=2.16",
+    "mypy>=2.4.1",
+    "pre-commit>=4.7.0",
+    "pytest>=9.2.0",
+    "pytest-cov>=7.1.0",
+    "respx>=0.23.1",
+    "ruff>=0.17.4",
+    "time-machine>=3.6.0",
+    "types-pyyaml>=6.0.12.20261103",
+]
