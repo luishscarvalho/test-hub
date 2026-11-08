@@ -5,8 +5,8 @@ from alembic import context
 from sqlalchemy import create_engine, pool
 from sqlmodel import SQLModel
 
-# Quando as tabelas existirem, importe o módulo delas aqui para registrá-las no metadata:
-# import app.adapters.outbound.persistence.tabelas  # noqa: F401
+# Registra as tabelas no SQLModel.metadata, para o autogenerate enxergá-las.
+import app.adapters.outbound.persistence.tabelas  # noqa: F401
 
 if context.config.config_file_name is not None:
     fileConfig(context.config.config_file_name)
