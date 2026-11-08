@@ -1,0 +1,12 @@
+.git
+.github
+.claude
+.venv
+.env
+docs
+tests
+reports
+htmlcov
+**/__pycache__
+.coverage
+.*_cache
