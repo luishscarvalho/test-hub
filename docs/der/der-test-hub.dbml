@@ -1,0 +1,99 @@
+// Test Hub: modelo de dados da v1
+// Fontes: ERS v0.4, ADR-002, ADR-005, ADR-006, ADR-007
+//
+// Registro de uso de IA
+// - O que a IA sugeriu: gerou este DBML a partir dos ADRs e apontou que spec_versao_id
+//   não pode ser NOT NULL na run, pois a run nasce antes de o worker baixar a spec.
+//   Depois do ADR-006 v1.1, ajustou as notas de mensagem_erro e de resultado_teste
+//   (run interrompida por tempo excedido e gravação dos resultados ao final).
+//   Depois do ADR-006 v1.2, incluiu erro interno do hub na nota de mensagem_erro e
+//   atualizou as fontes deste arquivo.
+// - O que aceitei: spec_versao_id nullable e os ajustes de notas.
+// - O que decidi diferente: nada até aqui.
+
+Project test_hub {
+  database_type: 'PostgreSQL'
+  Note: 'Modelo de dados da v1 do Test Hub.'
+}
+
+Enum origem_spec {
+  url
+  arquivo
+}
+
+Enum status_run {
+  na_fila
+  em_execucao
+  passou
+  falhou
+  interrompida
+}
+
+Enum status_resultado {
+  passou
+  falhou
+}
+
+Table api_alvo {
+  id bigint [pk, increment]
+  nome varchar [not null]
+  base_url varchar [not null]
+  spec_url varchar [note: 'Preenchida se a spec foi cadastrada por URL. Nula se foi por arquivo.']
+  criado_em timestamptz [not null, default: `now()`]
+}
+
+Table spec_versao {
+  id bigint [pk, increment]
+  api_alvo_id bigint [not null]
+  conteudo jsonb [not null, note: 'JSON normalizado. YAML é convertido antes de gravar.']
+  hash char(64) [not null, note: 'SHA-256 do JSON normalizado com chaves ordenadas.']
+  origem origem_spec [not null]
+  criado_em timestamptz [not null, default: `now()`]
+
+  indexes {
+    (api_alvo_id, hash) [unique, name: 'uq_spec_versao_api_hash']
+  }
+
+  Note: 'Imutável. Não pode ser removida enquanto houver run que a referencie (ADR-007).'
+}
+
+Table run {
+  id bigint [pk, increment]
+  api_alvo_id bigint [not null]
+  spec_versao_id bigint [note: 'Nula até o worker resolver a spec. Permanece nula se o download falhar, se a spec for inválida ou se a run for interrompida antes disso.']
+  status status_run [not null, default: 'na_fila']
+  seed bigint [not null, note: 'Seed usada pelo gerador (ADR-005).']
+  criado_em timestamptz [not null, default: `now()`, note: 'Momento em que a run entrou na fila.']
+  inicio timestamptz [note: 'Preenchido quando o worker pega a run.']
+  fim timestamptz [note: 'Preenchido em status final, inclusive interrompida.']
+  total_passou integer [not null, default: 0, note: 'Gravado junto com os resultados, ao finalizar. Zero em run interrompida.']
+  total_falhou integer [not null, default: 0, note: 'Gravado junto com os resultados, ao finalizar. Zero em run interrompida.']
+  mensagem_erro text [note: 'Motivo no nível da run: spec inacessível ou inválida (falhou), worker reiniciado, tempo máximo excedido ou erro interno do hub (interrompida).']
+
+  indexes {
+    (api_alvo_id, criado_em) [name: 'ix_run_api_criado_em']
+  }
+
+  Note: 'Status passou, falhou e interrompida são finais e imutáveis (RN-05, ADR-006).'
+}
+
+Table resultado_teste {
+  id bigint [pk, increment]
+  run_id bigint [not null]
+  endpoint varchar [not null, note: 'Caminho da spec, ex.: /tarefas/{id}']
+  metodo varchar(10) [not null]
+  status status_resultado [not null]
+  duracao_ms integer [not null, note: 'Soma da duração dos casos do endpoint (ADR-005).']
+  mensagem_erro text [note: 'Mensagem do primeiro caso que falhou (ADR-005).']
+
+  indexes {
+    (run_id, endpoint, metodo) [unique, name: 'uq_resultado_run_endpoint_metodo']
+  }
+
+  Note: 'Um resultado consolidado por par endpoint e método (RN-03, ADR-005). Gravados todos de uma vez, na mesma transação que finaliza a run. Run interrompida não tem resultados (ADR-006).'
+}
+
+Ref: spec_versao.api_alvo_id > api_alvo.id [delete: restrict]
+Ref: run.api_alvo_id > api_alvo.id [delete: restrict]
+Ref: run.spec_versao_id > spec_versao.id [delete: restrict]
+Ref: resultado_teste.run_id > run.id [delete: restrict]
