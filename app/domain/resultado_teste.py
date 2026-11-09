@@ -28,6 +28,15 @@ def consolidar_casos(endpoint: str, metodo: str, casos: list[CasoDeTeste]) -> Re
     todos_passaram = True
     primeira_mensagem: str | None = None
 
+    if not casos:  # RN03 T2: sem casos, resulta em falhou
+        return ResultadoDoTeste(
+            endpoint,
+            metodo,
+            StatusResultado.FALHOU,
+            0,
+            "Nenhum caso de teste executado",
+        )
+
     for caso in casos:
         duracao_total += caso.duracao_ms
         if not caso.passou and todos_passaram:
