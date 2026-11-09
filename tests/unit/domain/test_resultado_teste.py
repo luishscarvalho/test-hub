@@ -53,3 +53,10 @@ def test_us03_c1_todos_passando_nao_tem_mensagem() -> None:
     resultado = consolidar_casos("/tarefas", "GET", casos)
 
     assert resultado.mensagem_erro is None
+
+
+@pytest.mark.unit
+def test_rn03_t2_sem_casos_resulta_em_falhou() -> None:
+    resultado = consolidar_casos("/tarefas", "GET", [])
+
+    assert resultado.status == StatusResultado.FALHOU
