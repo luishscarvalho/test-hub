@@ -13,6 +13,7 @@ from app.adapters.outbound.persistence.repositorio_runs import (
     RunNaoEncontrada,
 )
 from app.adapters.outbound.persistence.repositorio_specs import RepositorioDeSpecsSQL
+from app.application.portas import RunFinalizada
 from app.domain.api_alvo import ApiAlvo
 from app.domain.resultado_teste import ResultadoDoTeste, StatusResultado
 from app.domain.run import Run
@@ -136,6 +137,48 @@ def test_rn15_t1_run_interrompida_e_salva_sem_resultados_e_com_totais_zerados(
     )
     assert (lida.total_passou, lida.total_falhou, lida.spec_versao_id) == (0, 0, None)
     assert repositorio.buscar_resultados(run.id) == []
+
+
+def test_rn05_t1_run_finalizada_nao_aceita_mudanca_de_status(engine: Engine) -> None:
+    api_id = _api(engine)
+    repositorio = RepositorioDeRunsSQL(engine)
+    run = _run_na_fila(engine, api_id)
+    run.iniciar(AGORA)
+    repositorio.salvar(run, [])
+    assert run.id is not None
+    # Cópia lida antes do fim: é o que outro processo (ex.: a varredura de tempo máximo)
+    # ainda teria em memória quando o worker termina a run.
+    copia_desatualizada = repositorio.buscar(run.id)
+    assert copia_desatualizada is not None
+    run.spec_versao_id = _spec(engine, api_id)
+    run.finalizar(AGORA + timedelta(seconds=5), [PASSOU])
+    repositorio.salvar(run, [PASSOU])
+
+    copia_desatualizada.interromper(AGORA + timedelta(minutes=10), "Tempo máximo excedido")
+    with pytest.raises(RunFinalizada):
+        repositorio.salvar(copia_desatualizada, [])
+
+    assert repositorio.buscar(run.id) == run
+    assert run.status == StatusRun.PASSOU
+
+
+def test_us06_c3_resultados_nao_sao_alterados_depois_que_a_run_termina(engine: Engine) -> None:
+    api_id = _api(engine)
+    repositorio = RepositorioDeRunsSQL(engine)
+    run = _run_na_fila(engine, api_id)
+    run.iniciar(AGORA)
+    run.spec_versao_id = _spec(engine, api_id)
+    run.finalizar(AGORA + timedelta(seconds=5), [PASSOU])
+    assert run.id is not None
+    repositorio.salvar(run, [PASSOU])
+
+    # Outro endpoint, para não esbarrar na restrição única: só o bloqueio de RN-05 impede.
+    with pytest.raises(RunFinalizada):
+        repositorio.salvar(run, [FALHOU])
+
+    assert repositorio.buscar_resultados(run.id) == [PASSOU]
+    assert _contar(engine, "resultado_teste") == 1
+    assert repositorio.buscar(run.id) == run
 
 
 def test_us04_c6_remover_apaga_a_run_do_banco(engine: Engine) -> None:
