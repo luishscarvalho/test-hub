@@ -16,16 +16,13 @@ pytestmark = pytest.mark.integration
 AGORA = datetime(2026, 11, 10, 12, 0, tzinfo=UTC)
 HASH_A = "a" * 64
 HASH_B = "b" * 64
+# Hash da versão gravada junto com a API em _api(). Diferente dos usados nos testes.
+HASH_CADASTRO = "0" * 64
 CONTEUDO: dict[str, object] = {
     "openapi": "3.1.0",
     "info": {"title": "x", "version": "1"},
     "paths": {"/a": {}},
 }
-
-
-def _api(engine: Engine, nome: str = "tarefas") -> ApiAlvo:
-    api = ApiAlvo(nome=nome, base_url="http://alvo:8000", criado_em=AGORA, spec_url="http://s")
-    return RepositorioDeApisSQL(engine).adicionar(api)
 
 
 def _spec(api_alvo_id: int, hash: str = HASH_A, criado_em: datetime = AGORA) -> SpecVersao:
@@ -38,15 +35,29 @@ def _spec(api_alvo_id: int, hash: str = HASH_A, criado_em: datetime = AGORA) -> 
     )
 
 
+def _api(engine: Engine, nome: str = "tarefas") -> ApiAlvo:
+    api = ApiAlvo(nome=nome, base_url="http://alvo:8000", criado_em=AGORA, spec_url="http://s")
+    return RepositorioDeApisSQL(engine).adicionar(api, _spec(0, HASH_CADASTRO))
+
+
+def _contar(engine: Engine, tabela: str) -> int:
+    with engine.connect() as conexao:
+        total: int = conexao.execute(text(f"SELECT count(*) FROM {tabela}")).scalar_one()
+        return total
+
+
 def test_us01_c3_adicionar_api_devolve_o_identificador_e_os_dados_gravados(
     engine: Engine,
 ) -> None:
     repositorio = RepositorioDeApisSQL(engine)
     entrada = ApiAlvo(nome="tarefas", base_url="http://alvo:8000", criado_em=AGORA)
 
-    gravada = repositorio.adicionar(entrada)
+    gravada = repositorio.adicionar(entrada, _spec(0))
 
     assert gravada.id is not None
+    # A versão fica ligada à API recém-criada, não ao api_alvo_id que veio na spec.
+    versao = RepositorioDeSpecsSQL(engine).buscar_mais_recente(gravada.id)
+    assert versao is not None and versao.hash == HASH_A
     # Lida de novo em outra sessão: prova que foi confirmada no banco, não só no objeto.
     assert repositorio.buscar(gravada.id) == ApiAlvo(
         id=gravada.id,
@@ -101,8 +112,8 @@ def test_rn13_t2_mesma_api_e_mesmo_hash_nao_sao_gravados_duas_vezes(engine: Engi
     with pytest.raises(IntegrityError, match="uq_spec_versao_api_hash"):
         repositorio.adicionar(_spec(api.id, HASH_A))
 
-    with engine.connect() as conexao:
-        assert conexao.execute(text("SELECT count(*) FROM spec_versao")).scalar_one() == 1
+    # A versão do cadastro e a primeira com HASH_A.
+    assert _contar(engine, "spec_versao") == 2
 
 
 def test_rn13_t3_buscar_mais_recente_devolve_a_ultima_versao_da_api(engine: Engine) -> None:
@@ -118,9 +129,12 @@ def test_rn13_t3_buscar_mais_recente_devolve_a_ultima_versao_da_api(engine: Engi
 
 
 def test_rn13_t3_api_sem_versao_devolve_none(engine: Engine) -> None:
-    api = _api(engine)
-    assert api.id is not None
-    assert RepositorioDeSpecsSQL(engine).buscar_mais_recente(api.id) is None
+    # O repositório de APIs sempre grava uma versão: a API sem versão vai direto ao banco.
+    with engine.begin() as conexao:
+        api_id = conexao.execute(
+            text("INSERT INTO api_alvo (nome, base_url) VALUES ('a', 'http://a') RETURNING id")
+        ).scalar_one()
+    assert RepositorioDeSpecsSQL(engine).buscar_mais_recente(api_id) is None
 
 
 def test_rn13_t5_versao_referenciada_por_run_nao_pode_ser_removida(engine: Engine) -> None:

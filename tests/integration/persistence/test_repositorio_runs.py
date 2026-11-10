@@ -29,8 +29,10 @@ FALHOU = ResultadoDoTeste(
 
 
 def _api(engine: Engine, nome: str = "tarefas") -> int:
+    # Spec do cadastro com hash próprio, para não colidir com a de _spec().
+    cadastro = SpecVersao(0, {"openapi": "3.1.0"}, "0" * 64, OrigemSpec.URL, AGORA)
     api = RepositorioDeApisSQL(engine).adicionar(
-        ApiAlvo(nome=nome, base_url="http://alvo:8000", criado_em=AGORA)
+        ApiAlvo(nome=nome, base_url="http://alvo:8000", criado_em=AGORA), cadastro
     )
     assert api.id is not None
     return api.id
