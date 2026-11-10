@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from app.domain.apuracao_run import apurar_resultados
+from app.domain.resultado_teste import ResultadoDoTeste
 from app.domain.status_run import StatusRun, transicionar
 
 
@@ -21,3 +23,10 @@ class Run:
     def iniciar(self, agora: datetime) -> None:
         self.status = transicionar(self.status, StatusRun.EM_EXECUCAO)
         self.inicio = agora
+
+    def finalizar(self, agora: datetime, resultados: list[ResultadoDoTeste]) -> None:
+        apuracao = apurar_resultados(resultados)
+        self.status = transicionar(self.status, apuracao.status)
+        self.fim = agora
+        self.total_passou = apuracao.total_passou
+        self.total_falhou = apuracao.total_falhou
