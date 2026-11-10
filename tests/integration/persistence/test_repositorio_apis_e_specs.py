@@ -4,7 +4,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import Engine, text
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import DataError, IntegrityError
 
 from app.adapters.outbound.persistence.repositorio_apis import RepositorioDeApisSQL
 from app.adapters.outbound.persistence.repositorio_specs import RepositorioDeSpecsSQL
@@ -66,6 +66,19 @@ def test_us01_c3_adicionar_api_devolve_o_identificador_e_os_dados_gravados(
         spec_url=None,
         criado_em=AGORA,
     )
+
+
+def test_us02_c1_falha_ao_gravar_a_spec_desfaz_a_gravacao_da_api(engine: Engine) -> None:
+    entrada = ApiAlvo(nome="tarefas", base_url="http://alvo:8000", criado_em=AGORA)
+    # Hash maior que CHAR(64): o INSERT da spec falha depois do INSERT da API.
+    # Se a API fosse confirmada em outra transação, ela sobreviveria ao erro.
+    spec_que_falha = _spec(0, hash="x" * 65)
+
+    with pytest.raises(DataError, match="character"):
+        RepositorioDeApisSQL(engine).adicionar(entrada, spec_que_falha)
+
+    assert _contar(engine, "api_alvo") == 0
+    assert _contar(engine, "spec_versao") == 0
 
 
 def test_us04_c1_buscar_api_inexistente_devolve_none(engine: Engine) -> None:
