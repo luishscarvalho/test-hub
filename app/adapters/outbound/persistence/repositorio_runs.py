@@ -1,8 +1,8 @@
-from sqlalchemy import Engine
+from sqlalchemy import Engine, update
 from sqlmodel import Session, col, select
 
 from app.adapters.outbound.persistence.mapeamento import (
-    copiar_estado_da_run,
+    estado_da_run,
     resultado_para_dominio,
     resultado_para_tabela,
     run_para_dominio,
@@ -10,8 +10,13 @@ from app.adapters.outbound.persistence.mapeamento import (
 )
 from app.adapters.outbound.persistence.tabelas import ResultadoTesteTabela, RunTabela
 from app.adapters.outbound.persistence.tabelas import StatusRun as StatusRunTabela
+from app.application.portas import RunFinalizada
 from app.domain.resultado_teste import ResultadoDoTeste
 from app.domain.run import Run
+from app.domain.status_run import StatusRun, eh_final
+
+# Status finais pela regra do domínio (RN-05), convertidos para o enum da tabela.
+_STATUS_FINAIS = [StatusRunTabela(s.value) for s in StatusRun if eh_final(s)]
 
 
 class RunNaoEncontrada(LookupError):
@@ -48,17 +53,28 @@ class RepositorioDeRunsSQL:
     def salvar(self, run: Run, resultados: list[ResultadoDoTeste]) -> None:
         """Grava o estado da run e os resultados em uma única transação (RN-15).
 
+        O UPDATE só altera a linha se o status gravado ainda não for final (RN-05). A
+        condição fica no próprio UPDATE, não em uma leitura anterior: duas gravações
+        concorrentes (worker e varredura de tempo máximo, por exemplo) não conseguem as duas
+        passar pela checagem. Se nenhuma linha for atualizada, nada é gravado e a exceção diz
+        se a run não existe ou já terminou.
+
         Se qualquer INSERT falhar, nada é gravado: nem o status, nem os totais, nem os
         resultados.
         """
         if run.id is None:
             raise ValueError("salvar() exige uma run já adicionada (com id)")
+        comando = (
+            update(RunTabela)
+            .where(col(RunTabela.id) == run.id, col(RunTabela.status).not_in(_STATUS_FINAIS))
+            .values(**estado_da_run(run))
+        )
         with Session(self._engine) as sessao:
-            linha = sessao.get(RunTabela, run.id)
-            if linha is None:
-                raise RunNaoEncontrada(f"Run {run.id} não existe")
-            copiar_estado_da_run(run, linha)
-            sessao.add(linha)
+            # connection(): mesma transação da sessão, e o retorno tipado expõe rowcount.
+            if sessao.connection().execute(comando).rowcount == 0:
+                if sessao.get(RunTabela, run.id) is None:
+                    raise RunNaoEncontrada(f"Run {run.id} não existe")
+                raise RunFinalizada(f"Run {run.id} já está em status final")
             sessao.add_all(resultado_para_tabela(run.id, r) for r in resultados)
             sessao.commit()
 
