@@ -12,6 +12,7 @@ import httpx
 import pytest
 
 from app.adapters.outbound.generator.gerador_schemathesis import GeradorSchemathesis
+from app.application.portas import SpecInvalida
 from app.domain.resultado_teste import ResultadoDoTeste, StatusResultado
 
 pytestmark = pytest.mark.integration
@@ -235,3 +236,47 @@ def test_rn03_t1_api_alvo_inacessivel_faz_cada_endpoint_falhar_com_o_erro(
         assert resultado.mensagem_erro is not None
         assert resultado.mensagem_erro.startswith("Erro ao chamar a API alvo:")
         assert "Connection refused" in resultado.mensagem_erro
+
+
+_RESPOSTA_OK = {"200": {"description": "ok"}}
+
+
+def _spec_com(operacao_quebrada: dict[str, Any], openapi: str = "3.0.3") -> dict[str, Any]:
+    # A operação válida vem antes: prova que nenhuma requisição sai se outra está quebrada.
+    return {
+        "openapi": openapi,
+        "info": {"title": "x", "version": "1"},
+        "paths": {
+            "/ok": {"get": {"responses": _RESPOSTA_OK}},
+            "/quebrada": {"get": {**operacao_quebrada, "responses": _RESPOSTA_OK}},
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ("spec", "motivo"),
+    [
+        pytest.param(_spec_com({}, openapi="9.9"), "Open API 9.9", id="versao-nao-suportada"),
+        pytest.param(
+            _spec_com({"parameters": [{"$ref": "#/components/parameters/Inexistente"}]}),
+            "Inexistente",
+            id="ref-quebrado",
+        ),
+        pytest.param(
+            _spec_com({"parameters": [{"name": "q", "in": "query", "schema": {"type": "nada"}}]}),
+            "Invalid `type` definition",
+            id="schema-invalido",
+        ),
+    ],
+)
+def test_us02_c2_spec_que_o_schemathesis_nao_interpreta_levanta_spec_invalida_com_motivo(
+    spec: dict[str, Any],
+    motivo: str,
+    gerador: GeradorSchemathesis,
+    servidor_falso: _Servidor,
+) -> None:
+    with pytest.raises(SpecInvalida, match="Schemathesis não conseguiu interpretar") as erro:
+        gerador.gerar_e_executar(spec, _url(servidor_falso), SEED)
+
+    assert motivo in str(erro.value)
+    assert servidor_falso.requisicoes == []
