@@ -10,17 +10,13 @@ from app.adapters.outbound.persistence.mapeamento import (
 )
 from app.adapters.outbound.persistence.tabelas import ResultadoTesteTabela, RunTabela
 from app.adapters.outbound.persistence.tabelas import StatusRun as StatusRunTabela
-from app.application.portas import RunFinalizada
+from app.application.portas import RunFinalizada, RunNaoEncontrada
 from app.domain.resultado_teste import ResultadoDoTeste
 from app.domain.run import Run
 from app.domain.status_run import StatusRun, eh_final
 
 # Status finais pela regra do domínio (RN-05), convertidos para o enum da tabela.
 _STATUS_FINAIS = [StatusRunTabela(s.value) for s in StatusRun if eh_final(s)]
-
-
-class RunNaoEncontrada(LookupError):
-    """salvar() ou remover() chamados para uma run que não existe no banco."""
 
 
 class RepositorioDeRunsSQL:
