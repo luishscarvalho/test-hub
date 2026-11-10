@@ -30,3 +30,13 @@ class Run:
         self.fim = agora
         self.total_passou = apuracao.total_passou
         self.total_falhou = apuracao.total_falhou
+
+    def falhar(self, agora: datetime, motivo: str) -> None:
+        self.status = transicionar(self.status, StatusRun.FALHOU)
+        self.fim = agora
+        self.mensagem_erro = motivo
+
+    def interromper(self, agora: datetime, motivo: str) -> None:
+        self.status = transicionar(self.status, StatusRun.INTERROMPIDA)
+        self.fim = agora
+        self.mensagem_erro = motivo
