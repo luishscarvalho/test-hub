@@ -5,12 +5,14 @@ import socket
 import subprocess
 import sys
 import time
+import uuid
 from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
 import httpx
 import pytest
+from sqlalchemy import Engine, create_engine, make_url, text
 
 RAIZ = Path(__file__).resolve().parent.parent
 LIMITE_SUBIDA_S = 15.0
@@ -78,3 +80,43 @@ def api_alvo_com_falha() -> Iterator[str]:
     """API alvo com MODO_FALHA=true."""
     with _subir_api_alvo(modo_falha="true") as base_url:
         yield base_url
+
+
+# Mesmo valor do .env.example. No CI, DATABASE_URL vem do job test.
+URL_BANCO_PADRAO = "postgresql+psycopg://testhub:testhub@localhost:5432/testhub"
+
+
+@pytest.fixture(scope="session")
+def _engine_da_sessao() -> Iterator[Engine]:
+    """Banco novo por sessão, com o esquema criado pelas migrações do Alembic (ADR-002)."""
+    url = make_url(os.environ.get("DATABASE_URL", URL_BANCO_PADRAO))
+    nome = f"repo_{uuid.uuid4().hex}"
+    admin = create_engine(url, isolation_level="AUTOCOMMIT")
+    with admin.connect() as conexao:
+        conexao.execute(text(f'CREATE DATABASE "{nome}"'))
+    url_teste = url.set(database=nome).render_as_string(hide_password=False)
+    engine = create_engine(url_teste)
+    try:
+        subprocess.run(
+            [sys.executable, "-m", "alembic", "upgrade", "head"],
+            cwd=RAIZ,
+            env={**os.environ, "DATABASE_URL": url_teste},
+            check=True,
+            capture_output=True,
+        )
+        yield engine
+    finally:
+        engine.dispose()
+        with admin.connect() as conexao:
+            conexao.execute(text(f'DROP DATABASE IF EXISTS "{nome}" WITH (FORCE)'))
+        admin.dispose()
+
+
+@pytest.fixture
+def engine(_engine_da_sessao: Engine) -> Iterator[Engine]:
+    """Engine do banco de testes. Cada teste termina com as tabelas truncadas."""
+    yield _engine_da_sessao
+    with _engine_da_sessao.begin() as conexao:
+        conexao.execute(
+            text("TRUNCATE resultado_teste, run, spec_versao, api_alvo RESTART IDENTITY CASCADE")
+        )
