@@ -8,12 +8,9 @@ from sqlalchemy import Engine, text
 from sqlalchemy.exc import IntegrityError
 
 from app.adapters.outbound.persistence.repositorio_apis import RepositorioDeApisSQL
-from app.adapters.outbound.persistence.repositorio_runs import (
-    RepositorioDeRunsSQL,
-    RunNaoEncontrada,
-)
+from app.adapters.outbound.persistence.repositorio_runs import RepositorioDeRunsSQL
 from app.adapters.outbound.persistence.repositorio_specs import RepositorioDeSpecsSQL
-from app.application.portas import RunFinalizada
+from app.application.portas import RunFinalizada, RunNaoEncontrada
 from app.domain.api_alvo import ApiAlvo
 from app.domain.resultado_teste import ResultadoDoTeste, StatusResultado
 from app.domain.run import Run
