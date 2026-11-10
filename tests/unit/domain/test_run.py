@@ -87,3 +87,31 @@ def test_rn11_t1_run_na_fila_nao_finaliza() -> None:
     run = Run(1, 42, CRIADO)
     with pytest.raises(TransicaoInvalida):
         run.finalizar(FIM, [OK])
+
+
+@pytest.mark.unit
+def test_us04_c5_falhar_resulta_em_falhou_com_motivo() -> None:
+    run = Run(1, 42, CRIADO)
+    run.iniciar(AGORA)
+
+    run.falhar(FIM, "spec inválida")
+    assert run.status == StatusRun.FALHOU
+    assert run.mensagem_erro == "spec inválida"
+
+
+@pytest.mark.unit
+def test_us05_c1_interromper_registra_fim() -> None:
+    run = Run(1, 42, CRIADO)
+    run.iniciar(AGORA)
+
+    run.interromper(FIM, "tempo excedido")
+    assert run.fim == FIM
+
+
+@pytest.mark.unit
+def test_rn12_t3_interromper_resulta_em_interrompida() -> None:
+    run = Run(1, 42, CRIADO)
+    run.iniciar(AGORA)
+
+    run.interromper(FIM, "erro interno")
+    assert run.status == StatusRun.INTERROMPIDA
