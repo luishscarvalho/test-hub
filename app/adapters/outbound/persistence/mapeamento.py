@@ -5,6 +5,7 @@ Os enums das tabelas e os do domínio têm os mesmos valores. A conversão passa
 """
 
 from datetime import datetime
+from typing import Any
 
 from app.adapters.outbound.persistence.tabelas import (
     ApiAlvoTabela,
@@ -72,25 +73,26 @@ def spec_para_dominio(linha: SpecVersaoTabela) -> SpecVersao:
 
 
 def run_para_tabela(run: Run) -> RunTabela:
-    linha = RunTabela(
+    return RunTabela(
         id=run.id,
         api_alvo_id=run.api_alvo_id,
         seed=run.seed,
         criado_em=run.criado_em,
+        **estado_da_run(run),
     )
-    copiar_estado_da_run(run, linha)
-    return linha
 
 
-def copiar_estado_da_run(run: Run, linha: RunTabela) -> None:
+def estado_da_run(run: Run) -> dict[str, Any]:
     """Campos que mudam ao longo da execução. Identidade, seed e criação não mudam."""
-    linha.spec_versao_id = run.spec_versao_id
-    linha.status = StatusRunTabela(run.status.value)
-    linha.inicio = run.inicio
-    linha.fim = run.fim
-    linha.total_passou = run.total_passou
-    linha.total_falhou = run.total_falhou
-    linha.mensagem_erro = run.mensagem_erro
+    return {
+        "spec_versao_id": run.spec_versao_id,
+        "status": StatusRunTabela(run.status.value),
+        "inicio": run.inicio,
+        "fim": run.fim,
+        "total_passou": run.total_passou,
+        "total_falhou": run.total_falhou,
+        "mensagem_erro": run.mensagem_erro,
+    }
 
 
 def run_para_dominio(linha: RunTabela) -> Run:
