@@ -15,7 +15,7 @@ class FilaIndisponivel(Exception):
 
 
 class RepositorioDeApis(Protocol):
-    def adicionar(self, api: ApiAlvo) -> ApiAlvo: ...
+    def adicionar(self, api: ApiAlvo, spec: SpecVersao) -> ApiAlvo: ...
     def buscar(self, id: int) -> ApiAlvo | None: ...
 
 
@@ -48,3 +48,11 @@ class GeradorDeTestes(Protocol):
 
 class ExecutorDeRun(Protocol):
     def enfileirar(self, run_id: int) -> None: ...
+
+
+class RunFinalizada(Exception):
+    """Run em status final não pode ser alterada (RN-05)."""
+
+
+class RunNaoEncontrada(Exception):
+    """Run em status final não pode ser alterada (RN-05)."""
