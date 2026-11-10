@@ -3,6 +3,9 @@
 Para cada operação da spec: gera os casos com seed fixa, executa cada caso contra a base URL,
 valida só status e schema da resposta (RN-04) e consolida com consolidar_casos do domínio.
 
+Spec que o Schemathesis não consegue interpretar (versão não suportada, $ref quebrado,
+schema com definição inválida) vira SpecInvalida, para a run terminar como falhou (RN-02).
+
 A geração termina antes da execução: os casos não dependem das respostas, então a mesma
 spec e a mesma seed produzem as mesmas requisições, com a API alvo de pé ou não (RN-14).
 """
@@ -15,13 +18,15 @@ from hypothesis import HealthCheck, Phase, given, settings
 from hypothesis import seed as semente
 from hypothesis.errors import Unsatisfiable
 from schemathesis import APIOperation, Case
+from schemathesis.core.errors import InvalidSchema, LoaderError
 from schemathesis.core.failures import Failure, FailureGroup
-from schemathesis.core.result import Err
+from schemathesis.core.result import Err, Ok
 from schemathesis.specs.openapi.checks import (
     response_schema_conformance,
     status_code_conformance,
 )
 
+from app.application.portas import SpecInvalida
 from app.domain.resultado_teste import CasoDeTeste, ResultadoDoTeste, consolidar_casos
 
 # Lista explícita: substitui o conjunto padrão de checagens do Schemathesis (RN-04).
@@ -40,16 +45,28 @@ class GeradorSchemathesis:
     def gerar_e_executar(
         self, spec: dict[str, object], base_url: str, seed: int
     ) -> list[ResultadoDoTeste]:
-        esquema = schemathesis.openapi.from_dict(spec)
-        resultados = []
-        for item in esquema.get_all_operations():
-            if isinstance(item, Err):
-                # Operação que o Schemathesis não consegue interpretar (ex.: $ref quebrado).
-                raise item.err()
-            operacao = item.ok()
-            casos = [self._executar(caso, base_url) for caso in self._gerar(operacao, seed)]
-            resultados.append(consolidar_casos(operacao.path, operacao.method.upper(), casos))
-        return resultados
+        try:
+            esquema = schemathesis.openapi.from_dict(spec)
+            operacoes = [self._operacao(item) for item in esquema.get_all_operations()]
+            # Tudo é gerado antes da primeira requisição: spec inválida não chega à API alvo.
+            gerados = [(operacao, self._gerar(operacao, seed)) for operacao in operacoes]
+        except (LoaderError, InvalidSchema) as erro:
+            raise SpecInvalida(f"Schemathesis não conseguiu interpretar a spec: {erro}") from erro
+        return [
+            consolidar_casos(
+                operacao.path,
+                operacao.method.upper(),
+                [self._executar(caso, base_url) for caso in casos],
+            )
+            for operacao, casos in gerados
+        ]
+
+    @staticmethod
+    def _operacao(item: Ok[APIOperation] | Err[InvalidSchema]) -> APIOperation:
+        if isinstance(item, Err):
+            # Operação que o Schemathesis não consegue interpretar (ex.: $ref quebrado).
+            raise item.err()
+        return item.ok()
 
     def _gerar(self, operacao: APIOperation, seed: int) -> list[Case]:
         casos: list[Case] = []
