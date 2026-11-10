@@ -26,3 +26,7 @@ def transicionar(atual: StatusRun, novo: StatusRun) -> StatusRun:
     if novo not in _DESTINOS[atual]:
         raise TransicaoInvalida(f"{atual} -> {novo}")
     return novo
+
+
+def eh_final(status: StatusRun) -> bool:
+    return not _DESTINOS[status]
