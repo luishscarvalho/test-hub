@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Protocol
 
 from app.domain.api_alvo import ApiAlvo
@@ -10,8 +11,20 @@ class SpecInvalida(Exception):
     """Spec não baixou ou não é OpenAPI válida (RN-02)."""
 
 
+class CadastroInvalido(Exception):
+    """Dados do cadastro da API alvo não atendem à US-01."""
+
+
+class ApiNaoEncontrada(Exception):
+    """Não existe API alvo com o identificador informado."""
+
+
 class FilaIndisponivel(Exception):
     """Execução não pôde ser enfileirada (RN-16)."""
+
+
+class Relogio(Protocol):
+    def __call__(self) -> datetime: ...
 
 
 class RepositorioDeApis(Protocol):
