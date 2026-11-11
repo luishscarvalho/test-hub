@@ -40,10 +40,10 @@ class ListarRuns:
         """Runs da API, da mais recente para a mais antiga (US07-C1, ordem do repositório)."""
         if self._apis.buscar(api_alvo_id) is None:
             raise ApiNaoEncontrada(f"API alvo {api_alvo_id} não existe")
-        return [_resumir(run) for run in self._runs.listar_por_api(api_alvo_id)]
+        return [resumir(run) for run in self._runs.listar_por_api(api_alvo_id)]
 
 
-def _resumir(run: Run) -> ResumoDaRun:
+def resumir(run: Run) -> ResumoDaRun:
     # Run lida do repositório sempre tem id.
     assert run.id is not None
     final = eh_final(run.status)
