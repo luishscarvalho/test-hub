@@ -2,6 +2,12 @@ x-imagem-hub: &imagem-hub
   image: ${TEST_HUB_IMAGE:-test-hub:local}
   build: .
 
+# Variáveis opcionais do hub e do worker (SEED, TEMPO_MAXIMO_RUN_S...). Sem .env, valem os
+# padrões de app/bootstrap/configuracao.py.
+x-env-hub: &env-hub
+  - path: .env
+    required: false
+
 x-ambiente-hub: &ambiente-hub
   DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-testhub}:${POSTGRES_PASSWORD:-testhub}@postgres:5432/${POSTGRES_DB:-testhub}
   REDIS_URL: redis://redis:6379/0
@@ -36,6 +42,7 @@ services:
   hub:
     <<: *imagem-hub
     command: sh -c "alembic upgrade head && exec uvicorn app.bootstrap.api:app --host 0.0.0.0 --port 8000"
+    env_file: *env-hub
     environment:
       <<: *ambiente-hub
     ports:
@@ -52,11 +59,11 @@ services:
       retries: 30
 
   # ADR-006: exatamente um worker, que só inicia com o hub saudável (migrações já aplicadas).
-  # Quando a recuperação de runs presas existir, o comando passa a ser o entrypoint de
-  # app/adapters/inbound/worker.
+  # Na subida, marca como interrompidas as runs presas em em_execucao (RN-12a).
   worker:
     <<: *imagem-hub
-    command: rq worker --url redis://redis:6379/0 runs
+    command: python -m app.adapters.inbound.worker
+    env_file: *env-hub
     environment:
       <<: *ambiente-hub
     deploy:
