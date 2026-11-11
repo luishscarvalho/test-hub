@@ -4,8 +4,8 @@ Especificação de Requisitos de Software
 
 |   |   |   |   |
 |---|---|---|---|
-| **Versão do documento** | 0.4 | **Versão do produto** | v1 |
-| **Data** | 08/11/2026 | **Prazo estimado da v1** | 3 a 5 dias após a definição de todos os documentos |
+| **Versão do documento** | 0.5 | **Versão do produto** | v1 |
+| **Data** | 11/11/2026 | **Prazo estimado da v1** | 3 a 5 dias após a definição de todos os documentos |
 | **Autor** | Luís Henrique Souza Carvalho | **Status** | Aprovado |
 
 # **1. Introdução**
@@ -299,7 +299,7 @@ Um épico representa uma funcionalidade macro do sistema, agrupando estórias de
 | **RNF-05** | Commits pequenos, com mensagens no padrão Conventional Commits. Pre-commit valida ruff e Conventional Commits. A IA aparece como coautora nos commits em que escreveu código. | Processo | Média |
 | **RNF-06** | Decisões relevantes registradas em docs/adr/. | Processo | Média |
 | **RNF-07** | Arquitetura hexagonal, com fronteiras de importação verificadas pelo import-linter no CI. | Arquitetura | Alta |
-| **RNF-08** | Divisão de trabalho com IA conforme ADR-009 (IA escreve código mecânico, desenvolvedor escreve domínio e casos de uso), registrada no CLAUDE.md. | Processo | Média |
+| **RNF-08** | Divisão de trabalho com IA conforme ADR-009 v1.1 (desenvolvedor escreve o domínio e as portas; IA escreve o código mecânico e os casos de uso, aprovados pelo desenvolvedor em PR), registrada no CLAUDE.md. | Processo | Média |
 
 ## **10.3 Contrato da API do Hub**
 
@@ -385,6 +385,14 @@ Campos inválidos ou ausentes respondem 422, com o motivo na mensagem de erro.
 | **O que aceitei** | Todas as correções recomendadas. |
 | **O que decidi diferente** | Nenhuma divergência nesta versão. |
 
+## **Versão 0.5**
+
+| **Item** | **Registro** |
+|---|---|
+| **O que a IA sugeriu** | Apontou que o RNF-08 descrevia a divisão antiga do ADR-009 e redigiu o novo texto. |
+| **O que aceitei** | A redação, alinhada ao ADR-009 v1.1. |
+| **O que decidi diferente** | A mudança da divisão foi decisão minha (ADR-009 v1.1). |
+
 # **15. Histórico de Versões**
 
 | **Versão** | **Data** | **Alteração** |
@@ -393,3 +401,4 @@ Campos inválidos ou ausentes respondem 422, com o motivo na mensagem de erro.
 | **0.2** | 08/11/2026 | Atualização conforme ADR-001 a ADR-009 e modelagem do banco (DER). |
 | **0.3** | 08/11/2026 | Ajustes conforme Plano de Testes v1.1, ADR-004 v1.2 e ADR-006 v1.1: metas de cobertura, job e2e, timeout como run interrompida (RN-12), gravação dos resultados ao final (RN-15) e referência ao Plano na Definição de Pronto. |
 | **0.4** | 08/11/2026 | Revisão cruzada dos documentos: erro interno como causa de run interrompida (RN-12), fila indisponível no disparo (RN-16), API alvo inacessível (RN-03), spec sem endpoints (RN-02), worker único, ordem de subida (RNF-04), contrato da API do hub (seção 10.3), MODO_FALHA para qualquer id, risco de perda da fila e status Aprovado. |
+| **0.5** | 11/11/2026 | RNF-08 alinhado ao ADR-009 v1.1: casos de uso implementados pela IA com aprovação por PR. |

@@ -2,7 +2,7 @@
 
 Lê a spec OpenAPI de uma API, gera smoke tests (status e schema) com Schemathesis, executa em fila e guarda o histórico de cada execução.
 
-> Em construção. Escopo da v1 na [ERS](docs/ers/Test-Hub-ERS-v0.4.md).
+> Em construção. Escopo da v1 na [ERS](docs/ers/Test-Hub-ERS-v0.5.md).
 
 ## Como rodar
 
@@ -17,10 +17,10 @@ docker compose up -d --build --wait
 
 ## Documentação
 
-- [ERS](docs/ers/Test-Hub-ERS-v0.4.md)
+- [ERS](docs/ers/Test-Hub-ERS-v0.5.md)
 - [ADRs](docs/adr/)
 - [Modelo de dados](docs/der/der-test-hub.dbml)
-- [Plano de Testes](docs/plano-de-testes/plano-de-testes-v1.2.md)
+- [Plano de Testes](docs/plano-de-testes/plano-de-testes-v1.3.md)
 
 ## Como usei IA neste projeto
 
