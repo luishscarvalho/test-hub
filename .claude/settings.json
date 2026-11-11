@@ -13,7 +13,6 @@
     "deny": [
       "Read(./.env)",
       "Edit(./app/domain/**)",
-      "Edit(./app/application/**)",
       "Bash(git push --force *)"
     ]
   }
