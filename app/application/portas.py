@@ -55,4 +55,4 @@ class RunFinalizada(Exception):
 
 
 class RunNaoEncontrada(Exception):
-    """Run em status final não pode ser alterada (RN-05)."""
+    """Não existe run com o identificador informado."""
