@@ -248,7 +248,7 @@ tests/
 ## 10. Observações
 
 - Este plano pode ser atualizado a qualquer momento para refletir mudanças de escopo ou de arquitetura, com registro no histórico de versões.
-- **Dependência da ERS v0.4:** este plano considera a meta de cobertura do RNF-02, os quatro jobs do RNF-03, a RN-12 com as três causas de run `interrompida`, a RN-15 (gravação dos resultados ao final), a RN-16 (fila indisponível no disparo), o contrato da API do hub e a referência a este plano na Definição de Pronto.
+- **Dependência da ERS v0.5:** este plano considera a meta de cobertura do RNF-02, os quatro jobs do RNF-03, a RN-12 com as três causas de run `interrompida`, a RN-15 (gravação dos resultados ao final), a RN-16 (fila indisponível no disparo), o contrato da API do hub e a referência a este plano na Definição de Pronto.
 - **Regra de sincronia:** os IDs da matriz seguem a numeração da ERS. Qualquer mudança de numeração ou redação de critério na ERS exige atualizar a matriz antes de renomear ou escrever testes.
 
 ## 11. Histórico de versões
@@ -258,7 +258,7 @@ tests/
 | 1.0 | 07/11/2026 | Criação. |
 | 1.1 | 08/11/2026 | Matriz alinhada à numeração da ERS v0.2, com IDs próprios para regras de negócio (RNxx-Tn). Inclusão dos testes de run interrompida por tempo excedido, da gravação dos resultados ao final, da obrigatoriedade de `spec_versao` em run com resultados (ADR-007 v1.1) e dos critérios US05-C1 e US08-C5. Job `e2e` e meta de cobertura alinhados ao ADR-004 v1.2. |
 | 1.2 | 08/11/2026 | Alinhamento à ERS v0.4 e aos ADRs revisados: novos testes US04-C6, RN02-T1, RN03-T1, RN12-T3 e NF-06, API alvo iniciada por fixture, cobertura somente sobre `app/`, correção do modo imediato do RQ e status Aprovado. |
-| 1.3 | 11/11/2026 | Seção 5 alinhada ao ADR-009 v1.1: testes dos casos de uso escritos pela IA a partir da matriz, conferidos pelo desenvolvedor. |
+| 1.3 | 11/11/2026 | Seção 5 alinhada ao ADR-009 v1.1: testes dos casos de uso escritos pela IA a partir da matriz, conferidos pelo desenvolvedor, e dependência atualizada para a ERS v0.5. |
 
 ## 12. Registro de uso de IA
 

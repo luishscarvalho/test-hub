@@ -25,7 +25,7 @@ Leia o documento antes de implementar algo que ele cobre. Em conflito entre cód
 Regras permanentes:
 
 - **Nunca escreva em `app/domain/`.** Lá a IA só sugere na conversa, em forma de revisão. O `.claude/settings.json` bloqueia essa escrita.
-- **Não mude as portas (`app/application/portas.py`) sem pedir.** Casos de uso em `app/application/` só entram por PR, com cada decisão não coberta pela ERS, ADRs ou Plano de Testes listada na descrição para o desenvolvedor confirmar ou reverter.
+- **Extensões de `app/application/portas.py` só por PR, listadas na descrição. Não altere nem remova portas existentes sem pedir.** Casos de uso em `app/application/` só entram por PR, com cada decisão não coberta pela ERS, ADRs ou Plano de Testes listada na descrição para o desenvolvedor confirmar ou reverter.
 - Trecho ambíguo entre mecânico e lógica é lógica: pergunte.
 - Decisão de arquitetura ou de escopo é do desenvolvedor e vira ADR. A IA levanta alternativas e recomenda, não decide.
 - Nada entra na `main` sem o desenvolvedor ler e saber explicar. Entregue em pedaços pequenos que dê para ler.
