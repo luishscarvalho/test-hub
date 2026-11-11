@@ -8,22 +8,24 @@ Leia o documento antes de implementar algo que ele cobre. Em conflito entre cód
 
 | O quê | Onde |
 | --- | --- |
-| Escopo, regras (RN), estórias (US), contrato da API | `docs/ers/Test-Hub-ERS-v0.4.md` |
+| Escopo, regras (RN), estórias (US), contrato da API | `docs/ers/Test-Hub-ERS-v0.5.md` |
 | Decisões de arquitetura | `docs/adr/` |
 | Modelo de dados | `docs/der/der-test-hub.dbml` |
-| Níveis de teste, matriz de rastreabilidade, IDs | `docs/plano-de-testes/plano-de-testes-v1.2.md` |
+| Níveis de teste, matriz de rastreabilidade, IDs | `docs/plano-de-testes/plano-de-testes-v1.3.md` |
 
 ## Divisão de trabalho (ADR-009)
 
 | Quem escreve | O quê | Onde fica |
 | --- | --- | --- |
-| **Desenvolvedor**, com revisão da IA | Regras de negócio e casos de uso: consolidação de resultados, status da run, imutabilidade, versionamento da spec | `domain/` e `application/` |
+| **Desenvolvedor**, com revisão da IA | Regras de negócio e portas dos casos de uso | `domain/` e `application/portas.py` |
+| **IA**, com aprovação do desenvolvedor em PR (ADR-009 v1.1) | Casos de uso, a partir das portas, das RN e da matriz | `application/` |
 | **IA**, com leitura do desenvolvedor | Estrutura do projeto, Dockerfile, Docker Compose, CI, configurações, migrações, rotas FastAPI, DTOs, mapeamentos, adapters (Schemathesis, RQ, banco, HTTP) e API alvo | `adapters/`, `bootstrap/`, `target_api/` e raiz |
-| **Em conjunto** | Testes do domínio e dos casos de uso: o desenvolvedor define os casos, a IA ajuda a escrever | `tests/` |
+| **Em conjunto** | Testes do domínio: o desenvolvedor define os casos. Testes dos casos de uso: a IA deriva dos IDs da matriz e o desenvolvedor confere | `tests/` |
 
 Regras permanentes:
 
-- **Nunca escreva em `app/domain/` nem em `app/application/`.** Lá a IA só sugere na conversa, em forma de revisão. O `.claude/settings.json` bloqueia essa escrita.
+- **Nunca escreva em `app/domain/`.** Lá a IA só sugere na conversa, em forma de revisão. O `.claude/settings.json` bloqueia essa escrita.
+- **Extensões de `app/application/portas.py` só por PR, listadas na descrição. Não altere nem remova portas existentes sem pedir.** Casos de uso em `app/application/` só entram por PR, com cada decisão não coberta pela ERS, ADRs ou Plano de Testes listada na descrição para o desenvolvedor confirmar ou reverter.
 - Trecho ambíguo entre mecânico e lógica é lógica: pergunte.
 - Decisão de arquitetura ou de escopo é do desenvolvedor e vira ADR. A IA levanta alternativas e recomenda, não decide.
 - Nada entra na `main` sem o desenvolvedor ler e saber explicar. Entregue em pedaços pequenos que dê para ler.
