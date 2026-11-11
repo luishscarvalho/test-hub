@@ -3,10 +3,7 @@
 A mesma validação vale para spec baixada por URL e para spec enviada como arquivo (US02-C5).
 """
 
-import json
-
 import httpx
-import yaml
 from openapi_spec_validator import validate
 from openapi_spec_validator.validation.exceptions import (
     OpenAPIValidationError,
@@ -15,6 +12,7 @@ from openapi_spec_validator.validation.exceptions import (
 from referencing.exceptions import Unresolvable
 
 from app.application.portas import SpecInvalida
+from app.application.spec_normalizada import normalizar
 
 # Chaves de um Path Item que são operações. As demais (parameters, summary...) não são.
 METODOS_HTTP = frozenset({"get", "put", "post", "delete", "options", "head", "patch", "trace"})
@@ -36,29 +34,11 @@ class CarregadorDeSpecHttp:
         return self.ler(resposta.content)
 
     def ler(self, conteudo: bytes) -> dict[str, object]:
-        spec = _converter_para_json(conteudo)
+        spec = normalizar(conteudo)
         _validar_openapi(spec)
         if not _tem_endpoint(spec):
             raise SpecInvalida("Spec inválida: nenhum endpoint declarado em paths (RN-02)")
         return spec
-
-
-def _converter_para_json(conteudo: bytes) -> dict[str, object]:
-    """Lê JSON ou YAML (YAML é superconjunto de JSON) e devolve um dict compatível com JSON.
-
-    YAML aceita chaves que JSON não aceita, como `200:` sem aspas (vira int). A volta por
-    json.dumps transforma essas chaves em texto, como ficariam se a spec fosse JSON.
-    """
-    try:
-        dados = yaml.safe_load(conteudo.decode("utf-8"))
-    except UnicodeDecodeError as erro:
-        raise SpecInvalida("Spec inválida: o conteúdo não é texto UTF-8") from erro
-    except yaml.YAMLError as erro:
-        raise SpecInvalida(f"Spec inválida: o conteúdo não é JSON nem YAML ({erro})") from erro
-    if not isinstance(dados, dict):
-        raise SpecInvalida("Spec inválida: o conteúdo não é um objeto JSON ou YAML")
-    convertido: dict[str, object] = json.loads(json.dumps(dados, default=str))
-    return convertido
 
 
 def _validar_openapi(spec: dict[str, object]) -> None:
