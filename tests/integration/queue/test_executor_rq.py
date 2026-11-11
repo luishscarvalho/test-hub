@@ -19,8 +19,9 @@ pytestmark = pytest.mark.integration
 # Mesmo valor do .env.example. No CI, REDIS_URL vem do job test.
 REDIS_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 # Qualquer função importável serve de tarefa. str devolve o argumento como texto, o que
-# prova que o run_id chegou ao job. A tarefa real é a entrada do worker, que ainda não existe.
+# prova que o run_id chegou ao job. A tarefa real fica em app/adapters/inbound/worker.
 TAREFA = "builtins.str"
+CALLBACK = "builtins.print"
 TEMPO_MAXIMO_S = 123
 RUN_ID = 42
 
@@ -39,6 +40,7 @@ def _executor(fila: str, redis_url: str = REDIS_URL) -> ExecutorDeRunRQ:
     return ExecutorDeRunRQ(
         redis_url=redis_url,
         tarefa=TAREFA,
+        callback_de_falha=CALLBACK,
         tempo_maximo_s=TEMPO_MAXIMO_S,
         timeout_conexao_s=1.0,
         fila=fila,
@@ -66,6 +68,12 @@ def test_rn12_t2_job_recebe_o_tempo_maximo_configurado(fila: Queue) -> None:
     _executor(fila.name).enfileirar(RUN_ID)
 
     assert fila.jobs[0].timeout == TEMPO_MAXIMO_S
+
+
+def test_rn12_t3_job_leva_o_callback_de_falha(fila: Queue) -> None:
+    _executor(fila.name).enfileirar(RUN_ID)
+
+    assert fila.jobs[0].failure_callback is print
 
 
 def test_us04_c6_redis_fora_do_ar_levanta_fila_indisponivel(fila: Queue) -> None:
