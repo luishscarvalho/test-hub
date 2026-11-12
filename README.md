@@ -2,7 +2,7 @@
 
 Hub que lê a spec OpenAPI de uma API, gera smoke tests (status e schema da resposta) com Schemathesis, executa as runs em fila e guarda o histórico de cada execução.
 
-Escopo da v1 na [ERS](docs/ers/Test-Hub-ERS-v0.5.md): cadastro da API alvo com validação da spec, geração dos testes, execução assíncrona com worker e consulta do histórico. A API alvo é uma API de tarefas do próprio projeto ([ADR-008](docs/adr/ADR-008-api-alvo.md)).
+Escopo da v1 na [ERS](docs/ers/Test-Hub-ERS-v0.6.md): cadastro da API alvo com validação da spec, geração dos testes, execução assíncrona com worker e consulta do histórico. A API alvo é uma API de tarefas do próprio projeto ([ADR-008](docs/adr/ADR-008-api-alvo.md)).
 
 ## Como rodar
 
@@ -71,7 +71,7 @@ docker compose up -d --build --wait
 uv run pytest -m e2e                        # fluxo completo no Compose
 ```
 
-Cada teste começa com o ID da [matriz de rastreabilidade](docs/plano-de-testes/plano-de-testes-v1.3.md) (ex.: `test_us04_c4_...`). O CI roda os jobs `quality`, `test`, `build` e `e2e` em todo Pull Request ([ADR-004](docs/adr/ADR-004-ci-cd.md)). A meta de cobertura é 85% no total e 100% de branches em `domain/` e `application/`.
+Cada teste começa com o ID da [matriz de rastreabilidade](docs/plano-de-testes/plano-de-testes-v1.4.md) (ex.: `test_us04_c4_...`). O CI roda os jobs `quality`, `test`, `build` e `e2e` em todo Pull Request ([ADR-004](docs/adr/ADR-004-ci-cd.md)). A meta de cobertura é 85% no total e 100% de branches em `domain/` e `application/`.
 
 ## Arquitetura
 
@@ -101,19 +101,19 @@ Fluxo de uma run ([ADR-006](docs/adr/ADR-006-execucao-da-run.md)):
 
 ## Documentação
 
-- [ERS](docs/ers/Test-Hub-ERS-v0.5.md): escopo, regras de negócio, estórias e contrato da API
+- [ERS](docs/ers/Test-Hub-ERS-v0.6.md): escopo, regras de negócio, estórias e contrato da API
 - [ADRs](docs/adr/): decisões de arquitetura
 - [Modelo de dados](docs/der/der-test-hub.dbml)
-- [Plano de Testes](docs/plano-de-testes/plano-de-testes-v1.3.md): níveis de teste e matriz de rastreabilidade
+- [Plano de Testes](docs/plano-de-testes/plano-de-testes-v1.4.md): níveis de teste e matriz de rastreabilidade
 
 ## Como usei IA neste projeto
 
 O projeto foi feito com o Claude Code. O uso de IA está registrado em:
 
-- **Divisão de trabalho e regras de uso:** [ADR-009](docs/adr/ADR-009-uso-de-ia.md).
+- **Divisão de trabalho e regras de uso:** [ADR-009](docs/adr/ADR-009-uso-de-ia.md). Desde a v1.2, eu especifico (ERS, ADRs e matriz do Plano de Testes), reviso e aprovo cada PR por comentário, e a IA escreve todo o código, inclusive o domínio.
 - **Instruções dadas à IA:** [`CLAUDE.md`](CLAUDE.md), com as fontes de verdade, o escopo e as regras de commit e de teste.
 - **Decisões:** as alternativas levantadas pela IA e a escolha final ficam nos [ADRs](docs/adr/). Cada documento tem a seção "Registro de uso de IA", com o que a IA sugeriu, o que aceitei e o que decidi diferente.
-- **Autoria do código:** os commits com código escrito pela IA levam o trailer `Co-Authored-By: Claude`.
+- **Autoria do código:** os commits com código escrito pela IA levam o trailer `Co-Authored-By: Claude`. A exceção é o `domain/` até a v1.1 do ADR-009: escrito por mim, com trechos da IA, nem todos os commits com trechos dela têm o trailer.
 
 ```bash
 git log --grep "Co-Authored-By: Claude" --oneline    # commits com código escrito pela IA
