@@ -2,7 +2,7 @@
 
 | **Projeto** | Test Hub | **Versão do produto** | v1 |
 | --- | --- | --- | --- |
-| **Versão do documento** | 1.3 | **Data** | 11/11/2026 |
+| **Versão do documento** | 1.4 | **Data** | 11/11/2026 |
 | **Autor** | Luís Henrique Souza Carvalho | **Status** | Aprovado |
 
 ## 1. Objetivos
@@ -105,8 +105,7 @@ Segue a divisão definida no ADR-009:
 
 | Testes | Quem define os casos | Quem escreve | Revisão |
 | --- | --- | --- | --- |
-| **Domínio** (`tests/unit/domain/`) | Desenvolvedor | Desenvolvedor, com ajuda da IA | Desenvolvedor e IA |
-| **Casos de uso** (`tests/unit/application/`) | IA, a partir dos IDs da matriz (ADR-009 v1.1) | IA | Desenvolvedor confere se cada teste verifica o que o nome diz |
+| **Domínio e casos de uso** (`tests/unit/`) | IA, a partir dos IDs da matriz (ADR-009 v1.2) | IA | Desenvolvedor confere se cada teste verifica o que o nome diz |
 | **Adapters e rotas** (`tests/integration/`) | IA, a partir dos critérios de aceitação e da Conformidade dos ADRs | IA | Desenvolvedor lê todo o código |
 | **E2E** (`tests/e2e/`) | Desenvolvedor | IA | Desenvolvedor |
 | **Configuração** (pytest, cobertura, CI) | IA | IA | Desenvolvedor |
@@ -248,7 +247,7 @@ tests/
 ## 10. Observações
 
 - Este plano pode ser atualizado a qualquer momento para refletir mudanças de escopo ou de arquitetura, com registro no histórico de versões.
-- **Dependência da ERS v0.5:** este plano considera a meta de cobertura do RNF-02, os quatro jobs do RNF-03, a RN-12 com as três causas de run `interrompida`, a RN-15 (gravação dos resultados ao final), a RN-16 (fila indisponível no disparo), o contrato da API do hub e a referência a este plano na Definição de Pronto.
+- **Dependência da ERS v0.6:** este plano considera a meta de cobertura do RNF-02, os quatro jobs do RNF-03, a RN-12 com as três causas de run `interrompida`, a RN-15 (gravação dos resultados ao final), a RN-16 (fila indisponível no disparo), o contrato da API do hub e a referência a este plano na Definição de Pronto.
 - **Regra de sincronia:** os IDs da matriz seguem a numeração da ERS. Qualquer mudança de numeração ou redação de critério na ERS exige atualizar a matriz antes de renomear ou escrever testes.
 
 ## 11. Histórico de versões
@@ -259,6 +258,7 @@ tests/
 | 1.1 | 08/11/2026 | Matriz alinhada à numeração da ERS v0.2, com IDs próprios para regras de negócio (RNxx-Tn). Inclusão dos testes de run interrompida por tempo excedido, da gravação dos resultados ao final, da obrigatoriedade de `spec_versao` em run com resultados (ADR-007 v1.1) e dos critérios US05-C1 e US08-C5. Job `e2e` e meta de cobertura alinhados ao ADR-004 v1.2. |
 | 1.2 | 08/11/2026 | Alinhamento à ERS v0.4 e aos ADRs revisados: novos testes US04-C6, RN02-T1, RN03-T1, RN12-T3 e NF-06, API alvo iniciada por fixture, cobertura somente sobre `app/`, correção do modo imediato do RQ e status Aprovado. |
 | 1.3 | 11/11/2026 | Seção 5 alinhada ao ADR-009 v1.1: testes dos casos de uso escritos pela IA a partir da matriz, conferidos pelo desenvolvedor, e dependência atualizada para a ERS v0.5. |
+| 1.4 | 11/11/2026 | Seção 5 alinhada ao ADR-009 v1.2: testes do domínio também escritos pela IA a partir da matriz, conferidos pelo desenvolvedor, e dependência atualizada para a ERS v0.6. |
 
 ## 12. Registro de uso de IA
 
@@ -268,3 +268,4 @@ tests/
 - **v1.1:** na revisão, identifiquei que o plano criava o job `e2e` e a meta de 100% sem atualizar o ADR-004 e a ERS, que a matriz tinha numeração diferente da ERS, que faltavam critérios da ERS v0.2 e o teste exigido pelo ADR-007 v1.1, e que ninguém definia o status final de uma run que excede o tempo máximo. A IA recomendou `interrompida` com motivo para o timeout, descartar resultados parciais (gravação apenas ao final), manter o job `e2e` no CI e separar os IDs de regras de negócio (RNxx-Tn) dos IDs de critérios de estória. Aceitei as recomendações e decidi atualizar a ERS eu mesmo.
 - **v1.2:** em uma revisão cruzada dos documentos, a IA apontou lacunas de regra (erro interno do worker, fila indisponível, API alvo fora do ar e spec sem endpoints), a falta da API alvo no job `test` e divergências sobre o modo imediato do RQ, e recomendou os ajustes desta versão. Aceitei.
 - **v1.3:** a IA apontou que a seção 5 descrevia a divisão antiga do ADR-009 e redigiu o ajuste. A mudança da divisão foi decisão minha (ADR-009 v1.1).
+- **v1.4:** a IA redigiu o ajuste da seção 5 a partir do ADR-009 v1.2. A mudança da divisão foi decisão minha.

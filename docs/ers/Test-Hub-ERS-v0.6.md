@@ -4,7 +4,7 @@ Especificação de Requisitos de Software
 
 |   |   |   |   |
 |---|---|---|---|
-| **Versão do documento** | 0.5 | **Versão do produto** | v1 |
+| **Versão do documento** | 0.6 | **Versão do produto** | v1 |
 | **Data** | 11/11/2026 | **Prazo estimado da v1** | 3 a 5 dias após a definição de todos os documentos |
 | **Autor** | Luís Henrique Souza Carvalho | **Status** | Aprovado |
 
@@ -299,7 +299,7 @@ Um épico representa uma funcionalidade macro do sistema, agrupando estórias de
 | **RNF-05** | Commits pequenos, com mensagens no padrão Conventional Commits. Pre-commit valida ruff e Conventional Commits. A IA aparece como coautora nos commits em que escreveu código. | Processo | Média |
 | **RNF-06** | Decisões relevantes registradas em docs/adr/. | Processo | Média |
 | **RNF-07** | Arquitetura hexagonal, com fronteiras de importação verificadas pelo import-linter no CI. | Arquitetura | Alta |
-| **RNF-08** | Divisão de trabalho com IA conforme ADR-009 v1.1 (desenvolvedor escreve o domínio e as portas; IA escreve o código mecânico e os casos de uso, aprovados pelo desenvolvedor em PR), registrada no CLAUDE.md. | Processo | Média |
+| **RNF-08** | Divisão de trabalho com IA conforme ADR-009 v1.2 (desenvolvedor especifica na ERS, nos ADRs e na matriz do Plano de Testes, revisa e aprova cada PR; IA escreve todo o código, inclusive o domínio), registrada no CLAUDE.md. | Processo | Média |
 
 ## **10.3 Contrato da API do Hub**
 
@@ -393,6 +393,14 @@ Campos inválidos ou ausentes respondem 422, com o motivo na mensagem de erro.
 | **O que aceitei** | A redação, alinhada ao ADR-009 v1.1. |
 | **O que decidi diferente** | A mudança da divisão foi decisão minha (ADR-009 v1.1). |
 
+## **Versão 0.6**
+
+| **Item** | **Registro** |
+|---|---|
+| **O que a IA sugeriu** | Redigiu o novo texto do RNF-08 a partir da decisão registrada no ADR-009 v1.2. |
+| **O que aceitei** | A redação, alinhada ao ADR-009 v1.2. |
+| **O que decidi diferente** | A mudança da divisão foi decisão minha (ADR-009 v1.2). |
+
 # **15. Histórico de Versões**
 
 | **Versão** | **Data** | **Alteração** |
@@ -402,3 +410,4 @@ Campos inválidos ou ausentes respondem 422, com o motivo na mensagem de erro.
 | **0.3** | 08/11/2026 | Ajustes conforme Plano de Testes v1.1, ADR-004 v1.2 e ADR-006 v1.1: metas de cobertura, job e2e, timeout como run interrompida (RN-12), gravação dos resultados ao final (RN-15) e referência ao Plano na Definição de Pronto. |
 | **0.4** | 08/11/2026 | Revisão cruzada dos documentos: erro interno como causa de run interrompida (RN-12), fila indisponível no disparo (RN-16), API alvo inacessível (RN-03), spec sem endpoints (RN-02), worker único, ordem de subida (RNF-04), contrato da API do hub (seção 10.3), MODO_FALHA para qualquer id, risco de perda da fila e status Aprovado. |
 | **0.5** | 11/11/2026 | RNF-08 alinhado ao ADR-009 v1.1: casos de uso implementados pela IA com aprovação por PR. |
+| **0.6** | 11/11/2026 | RNF-08 alinhado ao ADR-009 v1.2: a IA escreve todo o código, inclusive o domínio, com aprovação por comentário no PR. |
