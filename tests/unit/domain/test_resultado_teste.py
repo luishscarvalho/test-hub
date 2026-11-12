@@ -60,3 +60,15 @@ def test_rn03_t2_sem_casos_resulta_em_falhou() -> None:
     resultado = consolidar_casos("/tarefas", "GET", [])
 
     assert resultado.status == StatusResultado.FALHOU
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("mensagem", [None, "", "   "])
+def test_us06_c2_falha_sem_mensagem_recebe_mensagem_padrao(mensagem: str | None) -> None:
+    # o primeiro que falhou vem sem mensagem; o segundo tem, mas não é usado (RN-03)
+    casos = [CasoDeTeste(False, 10, mensagem), CasoDeTeste(False, 20, "erro B")]
+
+    resultado = consolidar_casos("/tarefas", "GET", casos)
+
+    assert resultado.status == StatusResultado.FALHOU
+    assert resultado.mensagem_erro == "Caso de teste falhou sem mensagem de erro"
